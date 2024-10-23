@@ -88,7 +88,7 @@ class Library(cmd.Cmd):
         #나의 아이디
         self.userID = userID
         #모든 아이디 print
-        print(userIDs)
+        # print(userIDs)
         #인트로
         console.print(self.intro)
 
