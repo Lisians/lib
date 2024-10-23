@@ -1,7 +1,7 @@
 qr.png
-security/*
+secrets/*
 log.txt
-!security/variables.json_enc
+!secrets/variables.json_enc
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

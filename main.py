@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 # 파일 암호화 복원
 PASSWORD = os.getenv("LIB_PASSWORD")
-enc_file_path = 'security/variables.json_enc'
+enc_file_path = 'secrets/variables.json_enc'
 kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=b'salt', iterations=390000)
 key = base64.urlsafe_b64encode(kdf.derive(bytes(PASSWORD, 'utf-8')))
 fernet = Fernet(key)

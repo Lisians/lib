@@ -6,7 +6,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 
-file_path = 'security/test.json'
+file_path = 'secrets/test.json'
 PASSWORD = 'passowrd'
 salt = os.urandom(16)
 kdf = PBKDF2HMAC(
