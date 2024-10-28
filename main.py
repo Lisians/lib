@@ -244,7 +244,7 @@ class Library(cmd.Cmd):
                 logger.critical("예약 실패")
                 return False
             logger.info("15분 타이머 시작...")
-            self.timer(1)
+            self.timer(15)
             self.do_return((_userID))
             i = i + 1
     
