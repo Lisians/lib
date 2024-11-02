@@ -1,4 +1,4 @@
-import os, sys, time, cmd, base64, json
+import os, sys, time, cmd, base64, json, math
 from datetime import datetime, timedelta
 import qrcode, requests
 import xml.etree.ElementTree as ET
@@ -94,7 +94,7 @@ class Library(cmd.Cmd):
 
         # 세션 생성
         self.session = requests.Session()
-        retry = Retry(connect=3, backoff_factor=0.5)
+        retry = Retry(connect=100000, backoff_factor=0)
         adapter = HTTPAdapter(max_retries=retry)
         self.session.mount('http://', adapter)
         self.session.mount('https://', adapter)
@@ -294,7 +294,19 @@ class Library(cmd.Cmd):
             remMin = int(_[0]) * 60 + int(_[1].split("분")[0])
         elif len(_) == 1:
             remMin = int(_[1].split("분")[0])
-        print(remMin)
+        logger.info(f"지금까지 남은 시간은 {remMin}분")
+        # 연장 횟수 확인
+        logger.info(f"지금까지 연장 횟수는 {self.contCnt}")
+        _ = int(self.contCnt.strip().split("/")[0])
+        while(_ != 4):
+            if remMin < 120 :
+                self.do_extend((_userID))
+            else:
+                self.timer(remMin - 119)
+                self.do_extend((_userID))
+        self.do_set((_userID))
+        self.do_loop((f"{self.roomNo} {self.seatNo}"))
+
         
 
         
@@ -312,7 +324,8 @@ class Library(cmd.Cmd):
         wait_time = int((next_min - now).total_seconds())
         # 남은 시간만큼 대기
         for i in range(wait_time):
-            print("남은 시간: {} 초.".format(wait_time - i), end="\r")
+            remain_second = wait_time - i
+            print("전체 시간 {}분 | 남은 시간: {}분 {}초...".format(min,math.floor(remain_second/60), remain_second%60), end="\r")
             time.sleep(1)
         print("\n")
 
