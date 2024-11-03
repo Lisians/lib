@@ -94,7 +94,7 @@ class Library(cmd.Cmd):
 
         # 세션 생성
         self.session = requests.Session()
-        retry = Retry(connect=100000, backoff_factor=0)
+        retry = Retry(total=100000, backoff_factor=0)
         adapter = HTTPAdapter(max_retries=retry)
         self.session.mount('http://', adapter)
         self.session.mount('https://', adapter)
