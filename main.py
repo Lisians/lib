@@ -304,6 +304,8 @@ class Library(cmd.Cmd):
             else:
                 self.timer(remMin - 119)
                 self.do_extend((_userID))
+        logger.info(f"반복 횟수 끝")
+        self.timer(remMin)
         self.do_set((_userID))
         self.do_loop((f"{self.roomNo} {self.seatNo}"))
 
@@ -342,6 +344,8 @@ class Library(cmd.Cmd):
 
         img = qr.make_image(fill_color="black", back_color="white")
         img.save('qr.png')
+        img = qr.make_image(fill_color="white", back_color="black")
+        img.save('qr-invert.png')
     
     def do_bad(self, arg):
         """오류 생성 테스트"""
