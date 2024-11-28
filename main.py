@@ -278,7 +278,7 @@ class Library(cmd.Cmd):
         self.do_assign((f"{toUserID} {_roomNo} {_seatNo}"))
         
     def do_autoexpand(self, *arg):
-        """자리 자동 연장 -> 미완성 """
+        """자리 자동 연장"""
         if arg and arg[0] : _userID = arg[0]
         else : _userID = self.userID
         self.do_info((_userID))
@@ -288,27 +288,14 @@ class Library(cmd.Cmd):
         elif self.reverseYn == 'Y':
             logger.critical("예약 상태에서는 연장이 불가능")
             return False
-        # 남은 시간 확인
-        _ = self.remTm.strip().split("시간")
-        if len(_) == 2:
-            remMin = int(_[0]) * 60 + int(_[1].split("분")[0])
-        elif len(_) == 1:
-            remMin = int(_[1].split("분")[0])
-        logger.info(f"지금까지 남은 시간은 {remMin}분")
-        # 연장 횟수 확인
-        logger.info(f"지금까지 연장 횟수는 {self.contCnt}")
-        _ = int(self.contCnt.strip().split("/")[0])
-        while(_ != 4):
-            if remMin < 120 :
-                self.do_extend((_userID))
-            else:
-                self.timer(remMin - 119)
-                self.do_extend((_userID))
-        logger.info(f"반복 횟수 끝")
-        self.timer(remMin)
-        self.do_set((_userID))
-        self.do_loop((f"{self.roomNo} {self.seatNo}"))
+        
+        remain_time, extend_num, wait = self.remain_extend_num(_userID)
+        while(extend_num < 4):
+            self.timer(wait)
+            self.do_extend((_userID))
 
+            remain_time, extend_num, wait = self.remain_extend_num(_userID)
+        logger.info("연장 횟수가 끝났습니다.")
         
 
         
@@ -330,6 +317,33 @@ class Library(cmd.Cmd):
             print("전체 시간 {}분 | 남은 시간: {}분 {}초...".format(min,math.floor(remain_second/60), remain_second%60), end="\r")
             time.sleep(1)
         print("\n")
+    
+    def remain_extend_num(self, id) -> tuple:
+        """남은 시간 & 연장 횟수
+
+        Args:
+            id (int): 학번
+
+        Returns:
+            tuple: 남은 시간(분), 연장 횟수, 기다려야 할 시간
+        """
+        self.do_info((id), output=False)
+        remain_text = self.remTm.strip().split("시간")
+        if len(remain_text) == 2:
+            remian_time = int(remain_text[0]) * 60 + int(remain_text[1].split("분")[0])
+        elif len(remain_text) == 1:
+            remian_time = int(remain_text[1].split("분")[0])
+        logger.info(f"지금까지 남은 시간은 {remian_time}분")
+        # 연장 횟수 확인
+        logger.info(f"지금까지 연장 횟수는 {self.contCnt}")
+        extend_num = int(self.contCnt.strip().split("/")[0])
+
+        if(remian_time < 120):
+            wait = 0
+        elif(remian_time > 120):
+            wait = remian_time - 120 + 1 # +1: 오차 보정
+
+        return remian_time, extend_num, wait
 
     def genQR(self, data):
         """QR 이미지 생성"""
