@@ -1,4 +1,5 @@
 qr.png
+qr-invert.png
 secrets/*
 log.txt
 !secrets/variables.json_enc
