@@ -280,21 +280,22 @@ class Library(cmd.Cmd):
     def do_autoexpand(self, *arg):
         """자리 자동 연장"""
         if arg and arg[0] : _userID = arg[0]
-        else : _userID = self.userID
+        else: _userID = self.userID
         self.do_info((_userID))
-        if self.endTm == None:
+        if self.endTm == None: 
             logger.critical("예약 정보가 확인되지 않음")
             return False
         elif self.reverseYn == 'Y':
             logger.critical("예약 상태에서는 연장이 불가능")
             return False
         
-        remain_time, extend_num, wait = self.remain_extend_num(_userID)
-        while(extend_num < 4):
-            self.timer(wait)
+
+        self.update_remain_extend_num(_userID)
+        while(self.extend_num < 4):
+            self.timer(self.wait)
             self.do_extend((_userID))
 
-            remain_time, extend_num, wait = self.remain_extend_num(_userID)
+            self.update_remain_extend_num(_userID)
         logger.info("연장 횟수가 끝났습니다.")
         
 
@@ -314,11 +315,11 @@ class Library(cmd.Cmd):
         # 남은 시간만큼 대기
         for i in range(wait_time):
             remain_second = wait_time - i
-            print("전체 시간 {}분 | 남은 시간: {}분 {}초...".format(min,math.floor(remain_second/60), remain_second%60), end="\r")
+            print("타이머 {}분 | 남은 시간: {}분 {}초...".format(min,math.floor(remain_second/60), remain_second%60), end="\r")
             time.sleep(1)
         print("\n")
     
-    def remain_extend_num(self, id) -> tuple:
+    def update_remain_extend_num(self, id) -> None:
         """남은 시간 & 연장 횟수
 
         Args:
@@ -330,20 +331,22 @@ class Library(cmd.Cmd):
         self.do_info((id), output=False)
         remain_text = self.remTm.strip().split("시간")
         if len(remain_text) == 2:
-            remian_time = int(remain_text[0]) * 60 + int(remain_text[1].split("분")[0])
+            remain_min = int(remain_text[0]) * 60 + int(remain_text[1].split("분")[0])
         elif len(remain_text) == 1:
-            remian_time = int(remain_text[1].split("분")[0])
-        logger.info(f"지금까지 남은 시간은 {remian_time}분")
+            remain_min = int(remain_text[1].split("분")[0])
+        logger.info(f"지금까지 남은 시간은 {remain_min}분")
         # 연장 횟수 확인
         logger.info(f"지금까지 연장 횟수는 {self.contCnt}")
         extend_num = int(self.contCnt.strip().split("/")[0])
 
-        if(remian_time < 120):
+        if(remain_min < 120):
             wait = 0
-        elif(remian_time > 120):
-            wait = remian_time - 120 + 1 # +1: 오차 보정
+        elif(remain_min > 120):
+            wait = remain_min - 120 + 1 # +1: 오차 보정
 
-        return remian_time, extend_num, wait
+        self.wait = wait
+        self.remain_min = remain_min
+        self.extend_num = extend_num
 
     def genQR(self, data):
         """QR 이미지 생성"""
