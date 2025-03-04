@@ -1,6 +1,6 @@
 import os, sys, time, cmd, base64, json, math
+import qrcode, requests, schedule
 from datetime import datetime, timedelta
-import qrcode, requests
 import xml.etree.ElementTree as ET
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
@@ -70,15 +70,18 @@ class Library(cmd.Cmd):
     intro.add_row("extend","연장","*userID")
     intro.add_row("return","반납","*userID")
     intro.add_row("exit","종료","*userID")
-    intro.add_row("loop","지정석","roomNo seatNo")
+    intro.add_row("loop","루프","roomNo seatNo")
     intro.add_row("stateAll","모든 좌석","")
     intro.add_row("swap","자리 스왑","fromUserID toUserID")
     intro.add_row("autoexpand", "자동 연장", "*userID")
+    intro.add_row("book", "예약", "time roomNo SeatNo")
     prompt = '(입력) : '
 
     def onecmd(self, line):
         try:
             return super().onecmd(line)
+        except KeyboardInterrupt:
+            return False
         except Exception as e:
             # display error message
             logger.error(e)
@@ -119,8 +122,7 @@ class Library(cmd.Cmd):
 
     def do_qr(self, *arg):
         """qr코드를 생성합니다"""
-        if arg and arg[0]: _userID = arg[0]
-        else : _userID = self.userID
+        _userID = self.get_userid(self, arg)
         payload = { "userID": _userID }
         response = self.session.post(f"{API_ENDPOINT}{qr_path}", data=payload)
         root = ET.fromstring(response.text)
@@ -165,8 +167,9 @@ class Library(cmd.Cmd):
 
     def do_info(self, *arg, output=True):
         """자리 상태를 확인합니다."""
-        if arg and arg[0]: _userID = arg[0]
-        else : _userID = self.userID
+        # if arg and arg[0]: _userID = arg[0]
+        # else : _userID = self.userID
+        _userID = self.get_userid(self, arg)
         payload = { "userID": _userID }
         response = self.session.post(f"{API_ENDPOINT}{info_path}", data=payload)
         root = ET.fromstring(response.text)
@@ -193,8 +196,7 @@ class Library(cmd.Cmd):
 
     def do_extend(self, *arg):
         """자리를 연장합니다."""
-        if arg and arg[0]: _userID = arg[0]
-        else : _userID = self.userID
+        _userID = self.get_userid(self, arg)
         self.do_info(_userID, output=False)
         payload = {
           "userID": _userID,
@@ -208,8 +210,7 @@ class Library(cmd.Cmd):
 
     def do_return(self, *arg):
         """자리를 반납합니다."""
-        if arg and arg[0]: _userID = arg[0]
-        else : _userID = self.userID
+        _userID = self.get_userid(self, arg)
         self.do_info(_userID, output=False)
         payload = {
           "userID": _userID,
@@ -298,11 +299,25 @@ class Library(cmd.Cmd):
             self.update_remain_extend_num(_userID)
         logger.info("연장 횟수가 끝났습니다.")
         
+    def do_book(self, arg):
+        """예약
+        """
+        _time, _roomNo, _seatNo = [s for s in arg.split()]
+        # schedule.every().day.at("11:05").do(self.do_loop(self, f"{_roomNo} {_seatNo}"))
+        schedule.every().day.at("12:05").do(self.do_info(self))
+        # schedule.run_pending()    
 
         
     def do_show(self):
         """자리 번호 확인"""
         pass    
+
+    def get_userid(self, *arg) -> str:
+        """userid를 얻음
+        """
+        if arg[len(arg)-1] and arg[len(arg)-1][0] : _userID = arg[len(arg)-1][0]
+        else: _userID = self.userID
+        return _userID
 
     def timer(self, min):
         """min분 타이머"""
@@ -324,9 +339,6 @@ class Library(cmd.Cmd):
 
         Args:
             id (int): 학번
-
-        Returns:
-            tuple: 남은 시간(분), 연장 횟수, 기다려야 할 시간
         """
         self.do_info((id), output=False)
         remain_text = self.remTm.strip().split("시간")
