@@ -15,7 +15,10 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 # 파일 암호화 복원
 PASSWORD = os.getenv("LIB_PASSWORD")
 enc_file_path = 'secrets/variables.json_enc'
-kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=b'salt', iterations=390000)
+kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
+                 length=32,
+                 salt=b'salt',
+                 iterations=390000)
 key = base64.urlsafe_b64encode(kdf.derive(bytes(PASSWORD, 'utf-8')))
 fernet = Fernet(key)
 # opening the encrypted file
@@ -37,7 +40,6 @@ userID = data['userID']
 userIDs = data['userIDs']
 console = Console()
 
-
 # 로그 생성
 logger = logging.getLogger()
 # 로그 색상
@@ -45,7 +47,9 @@ coloredlogs.install(logger=logger)
 # 로그의 출력 기준 설정
 logger.setLevel(logging.INFO)
 # log 출력 형식
-formatter = logging.Formatter( '%(asctime)s, %(levelname)-8s [%(filename)s:%(module)s:%(funcName)s:%(lineno)d] %(message)s') 
+formatter = logging.Formatter(
+    '%(asctime)s, %(levelname)-8s [%(filename)s:%(module)s:%(funcName)s:%(lineno)d] %(message)s'
+)
 # # log를 console에 출력
 # stream_handler = logging.StreamHandler()
 # stream_handler.setFormatter(formatter)
@@ -56,23 +60,26 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 
 
-
 class Library(cmd.Cmd):
     # 인트로 테이블
-    intro = Table(title=f"도서관 도우미 / [turquoise2]ID : {userID}[/turquoise2]", box=box.ASCII2, show_header=True, header_style="blue", show_lines=True)
+    intro = Table(title=f"도서관 도우미 / [turquoise2]ID : {userID}[/turquoise2]",
+                  box=box.ASCII2,
+                  show_header=True,
+                  header_style="blue",
+                  show_lines=True)
     intro.add_column("명령어", style="dim")
     intro.add_column("제목")
     intro.add_column("매개변수, *은 선택", style="bold yellow")
-    intro.add_row("set","기본 유저 설정","userID")
-    intro.add_row("qr","QR 생성","*userID")
-    intro.add_row("assign","자리 할당","*userID roomNo seatNo")
-    intro.add_row("info","자리 정보","*userID")
-    intro.add_row("extend","연장","*userID")
-    intro.add_row("return","반납","*userID")
-    intro.add_row("exit","종료","*userID")
-    intro.add_row("loop","루프","roomNo seatNo")
-    intro.add_row("stateAll","모든 좌석","")
-    intro.add_row("swap","자리 스왑","fromUserID toUserID")
+    intro.add_row("set", "기본 유저 설정", "userID")
+    intro.add_row("qr", "QR 생성", "*userID")
+    intro.add_row("assign", "자리 할당", "*userID roomNo seatNo")
+    intro.add_row("info", "자리 정보", "*userID")
+    intro.add_row("extend", "연장", "*userID")
+    intro.add_row("return", "반납", "*userID")
+    intro.add_row("exit", "종료", "*userID")
+    intro.add_row("loop", "루프", "roomNo seatNo")
+    intro.add_row("stateAll", "모든 좌석", "")
+    intro.add_row("swap", "자리 스왑", "fromUserID toUserID")
     intro.add_row("autoexpand", "자동 연장", "*userID")
     intro.add_row("book", "예약", "time roomNo SeatNo")
     prompt = '(입력) : '
@@ -93,7 +100,7 @@ class Library(cmd.Cmd):
         #모든 아이디 print
         # print(userIDs)
         #인트로
-        console.print(self.intro)
+        # console.print(self.intro)
 
         # 세션 생성
         self.session = requests.Session()
@@ -101,7 +108,10 @@ class Library(cmd.Cmd):
         adapter = HTTPAdapter(max_retries=retry)
         self.session.mount('http://', adapter)
         self.session.mount('https://', adapter)
-        self.session.headers.update({"Content-Type" : "application/x-www-form-urlencoded", "User-Agent" : USER_AGENT})
+        self.session.headers.update({
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": USER_AGENT
+        })
 
         self.do_info()
         self.do_qr()
@@ -111,10 +121,10 @@ class Library(cmd.Cmd):
             logger.info("프로그램을 종료합니다...")
             return True
         # console.print(self.intro)
-    
-    def do_0(self, *arg):
+
+    def do_help(self, *arg):
         console.print(self.intro)
-    
+
     def do_set(self, *arg):
         """기본 유저를 설정합니다."""
         self.userID = arg[0]
@@ -123,7 +133,7 @@ class Library(cmd.Cmd):
     def do_qr(self, *arg):
         """qr코드를 생성합니다"""
         _userID = self.get_userid(self, arg)
-        payload = { "userID": _userID }
+        payload = {"userID": _userID}
         response = self.session.post(f"{API_ENDPOINT}{qr_path}", data=payload)
         root = ET.fromstring(response.text)
         resultCode = root[0].text
@@ -147,19 +157,17 @@ class Library(cmd.Cmd):
                 _userID = self.userID
                 _roomNo = _[0]
                 _seatNo = _[1]
-            else: raise Exception
+            else:
+                raise Exception
         except:
             logger.warning("올바른 매개수를 입력하세요.")
             return False
-        payload = {
-          "userID": _userID,
-          "seatNo": _seatNo,
-          "roomNo": _roomNo
-        }
-        response = self.session.post(f"{API_ENDPOINT}{assign_path}", data=payload)
+        payload = {"userID": _userID, "seatNo": _seatNo, "roomNo": _roomNo}
+        response = self.session.post(f"{API_ENDPOINT}{assign_path}",
+                                     data=payload)
         try:
             root = ET.fromstring(response.text)
-            resultCode = root[0][0].text   
+            resultCode = root[0][0].text
             resultMsg = root[0][1].text
             logger.info(resultMsg)
         except:
@@ -170,16 +178,17 @@ class Library(cmd.Cmd):
         # if arg and arg[0]: _userID = arg[0]
         # else : _userID = self.userID
         _userID = self.get_userid(self, arg)
-        payload = { "userID": _userID }
-        response = self.session.post(f"{API_ENDPOINT}{info_path}", data=payload)
+        payload = {"userID": _userID}
+        response = self.session.post(f"{API_ENDPOINT}{info_path}",
+                                     data=payload)
         root = ET.fromstring(response.text)
         mySeat = {
-            "roomNm" : root[2][0][1].text,
-            "roomNo" : root[2][0][2].text,
-            "seatNo" : root[2][0][3].text,
-            "seat_use_time" : root[2][0][4].text,
-            "reverseYn" : root[2][0][11].text,
-            "remTm" : root[2][0][7].text
+            "roomNm": root[2][0][1].text,
+            "roomNo": root[2][0][2].text,
+            "seatNo": root[2][0][3].text,
+            "seat_use_time": root[2][0][4].text,
+            "reverseYn": root[2][0][11].text,
+            "remTm": root[2][0][7].text
         }
         self.seatNo = mySeat['seatNo']
         self.roomNo = mySeat['roomNo']
@@ -199,11 +208,12 @@ class Library(cmd.Cmd):
         _userID = self.get_userid(self, arg)
         self.do_info(_userID, output=False)
         payload = {
-          "userID": _userID,
-          "seatNo": self.seatNo,
-          "roomNo": self.roomNo
+            "userID": _userID,
+            "seatNo": self.seatNo,
+            "roomNo": self.roomNo
         }
-        response = self.session.post(f"{API_ENDPOINT}{extend_path}", data=payload)
+        response = self.session.post(f"{API_ENDPOINT}{extend_path}",
+                                     data=payload)
         root = ET.fromstring(response.text)
         resultMsg = root[0][1].text
         logger.info(resultMsg)
@@ -213,22 +223,23 @@ class Library(cmd.Cmd):
         _userID = self.get_userid(self, arg)
         self.do_info(_userID, output=False)
         payload = {
-          "userID": _userID,
-          "seatNo": self.seatNo,
-          "roomNo": self.roomNo
+            "userID": _userID,
+            "seatNo": self.seatNo,
+            "roomNo": self.roomNo
         }
-        response = self.session.post(f"{API_ENDPOINT}{return_path}", data=payload)
+        response = self.session.post(f"{API_ENDPOINT}{return_path}",
+                                     data=payload)
         root = ET.fromstring(response.text)
         resultMsg = root[0][1].text
         logger.info(f"{_userID} : {resultMsg}")
-    
+
     def do_exit(self, *arg):
         """ 종료합니다 """
         return True
 
     def do_loop(self, arg):
         userIDs = ["wise10", "wise11", "wise12", "wise13", "wise14"]
-        
+
         self.do_info(userIDs[0])
         _roomNo, _seatNo = [s for s in arg.split()]
         if self.roomNo != None or self.seatNo != None:
@@ -248,13 +259,13 @@ class Library(cmd.Cmd):
             self.timer(15)
             self.do_return((_userID))
             i = i + 1
-    
+
     def do_stateAll(self, arg):
         """모든 아이디의 자리 현황을 출력합니다."""
-        _userID = self.userID    #임시저장
+        _userID = self.userID  #임시저장
         for id in userIDs:
             self.do_info((id))
-        self.userID = _userID    #다시 저장
+        self.userID = _userID  #다시 저장
 
     def do_swap(self, arg):
         """자리를 교환합니다"""
@@ -277,46 +288,46 @@ class Library(cmd.Cmd):
         _roomNo = self.roomNo
         _seatNo = self.seatNo
         self.do_assign((f"{toUserID} {_roomNo} {_seatNo}"))
-        
+
     def do_autoexpand(self, *arg):
         """자리 자동 연장"""
-        if arg and arg[0] : _userID = arg[0]
+        if arg and arg[0]: _userID = arg[0]
         else: _userID = self.userID
         self.do_info((_userID))
-        if self.endTm == None: 
+        if self.endTm == None:
             logger.critical("예약 정보가 확인되지 않음")
             return False
         elif self.reverseYn == 'Y':
             logger.critical("예약 상태에서는 연장이 불가능")
             return False
-        
 
         self.update_remain_extend_num(_userID)
-        while(self.extend_num < 4):
+        while (self.extend_num < 4):
             self.timer(self.wait)
             self.do_extend((_userID))
 
             self.update_remain_extend_num(_userID)
         logger.info("연장 횟수가 끝났습니다.")
-        
+
     def do_book(self, arg):
         """예약
         """
         _time, _roomNo, _seatNo = [s for s in arg.split()]
         # schedule.every().day.at("11:05").do(self.do_loop(self, f"{_roomNo} {_seatNo}"))
         schedule.every().day.at("12:05").do(self.do_info(self))
-        # schedule.run_pending()    
+        # schedule.run_pending()
 
-        
     def do_show(self):
         """자리 번호 확인"""
-        pass    
+        pass
 
     def get_userid(self, *arg) -> str:
         """userid를 얻음
         """
-        if arg[len(arg)-1] and arg[len(arg)-1][0] : _userID = arg[len(arg)-1][0]
-        else: _userID = self.userID
+        if arg[len(arg) - 1] and arg[len(arg) - 1][0]:
+            _userID = arg[len(arg) - 1][0]
+        else:
+            _userID = self.userID
         return _userID
 
     def timer(self, min):
@@ -330,10 +341,12 @@ class Library(cmd.Cmd):
         # 남은 시간만큼 대기
         for i in range(wait_time):
             remain_second = wait_time - i
-            print("타이머 {}분 | 남은 시간: {}분 {}초...".format(min,math.floor(remain_second/60), remain_second%60), end="\r")
+            print("타이머 {}분 | 남은 시간: {}분 {}초...".format(
+                min, math.floor(remain_second / 60), remain_second % 60),
+                  end="\r")
             time.sleep(1)
         print("\n")
-    
+
     def update_remain_extend_num(self, id) -> None:
         """남은 시간 & 연장 횟수
 
@@ -343,7 +356,8 @@ class Library(cmd.Cmd):
         self.do_info((id), output=False)
         remain_text = self.remTm.strip().split("시간")
         if len(remain_text) == 2:
-            remain_min = int(remain_text[0]) * 60 + int(remain_text[1].split("분")[0])
+            remain_min = int(remain_text[0]) * 60 + int(
+                remain_text[1].split("분")[0])
         elif len(remain_text) == 1:
             remain_min = int(remain_text[1].split("분")[0])
         logger.info(f"지금까지 남은 시간은 {remain_min}분")
@@ -351,10 +365,10 @@ class Library(cmd.Cmd):
         logger.info(f"지금까지 연장 횟수는 {self.contCnt}")
         extend_num = int(self.contCnt.strip().split("/")[0])
 
-        if(remain_min < 120):
+        if (remain_min < 120):
             wait = 0
-        elif(remain_min > 120):
-            wait = remain_min - 120 + 1 # +1: 오차 보정
+        elif (remain_min > 120):
+            wait = remain_min - 120 + 1  # +1: 오차 보정
 
         self.wait = wait
         self.remain_min = remain_min
@@ -362,11 +376,9 @@ class Library(cmd.Cmd):
 
     def genQR(self, data):
         """QR 이미지 생성"""
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_H,
-            box_size=5
-        )
+        qr = qrcode.QRCode(version=1,
+                           error_correction=qrcode.constants.ERROR_CORRECT_H,
+                           box_size=5)
         qr.add_data(data)
         qr.make(fit=True)
 
@@ -376,11 +388,11 @@ class Library(cmd.Cmd):
         img.save('qr-invert.png')
 
         qr.print_ascii()
-    
+
     def do_bad(self, arg):
         """오류 생성 테스트"""
         er = arg[0]
 
-        
+
 if __name__ == '__main__':
     Library().cmdloop()
