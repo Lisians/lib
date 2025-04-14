@@ -363,10 +363,9 @@ class Library(cmd.Cmd):
     def genQR(self, data):
         """QR 이미지 생성"""
         qr = qrcode.QRCode(
-            version=6,
+            version=1,
             error_correction=qrcode.constants.ERROR_CORRECT_H,
-            box_size=5,
-            border=30,
+            box_size=5
         )
         qr.add_data(data)
         qr.make(fit=True)
@@ -375,6 +374,8 @@ class Library(cmd.Cmd):
         img.save('qr.png')
         img = qr.make_image(fill_color="white", back_color="black")
         img.save('qr-invert.png')
+
+        qr.print_ascii()
     
     def do_bad(self, arg):
         """오류 생성 테스트"""
