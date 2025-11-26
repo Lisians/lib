@@ -12,6 +12,22 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
+def save_to_json_file(data, filename):
+    """
+    제공된 데이터를 JSON 형식으로 지정된 파일에 저장합니다.
+    JSON은 데이터의 구조(리스트, 딕셔너리 등)를 보존하는 데 좋습니다.
+    """
+    try:
+        # 'w' 모드: 파일이 존재하면 내용을 덮어씁니다.
+        with open(filename, 'w', encoding='utf-8') as file:
+            # json.dump()를 사용하여 데이터를 파일에 씁니다.
+            # indent=4는 읽기 쉬운 형식으로 들여쓰기를 추가합니다.
+            json.dump(data, file, ensure_ascii=False, indent=4)
+        print(f"✅ 데이터가 '{filename}'에 JSON 형식으로 성공적으로 저장되었습니다.")
+    except IOError as e:
+        print(f"❌ JSON 파일 쓰기 오류가 발생했습니다: {e}")
+
+
 # 파일 암호화 복원
 PASSWORD = os.getenv("LIB_PASSWORD")
 enc_file_path = 'secrets/variables.json_enc'
@@ -27,6 +43,8 @@ with open(enc_file_path, 'rb') as enc_file:
 # decrypting the file
 decrypted = fernet.decrypt(encrypted).decode('utf8')
 data = json.loads(decrypted)
+
+# save_to_json_file(data, 'secrets/variables_test.json')
 
 #변수 선언
 API_ENDPOINT = data['API_ENDPOINT']
@@ -238,7 +256,7 @@ class Library(cmd.Cmd):
         return True
 
     def do_loop(self, arg):
-        userIDs = ["wise10", "wise11", "wise12", "wise13", "wise14"]
+        userIDs = ["wise09", "wise10", "wise11", "wise12", "wise08"]
 
         self.do_info(userIDs[0])
         _roomNo, _seatNo = [s for s in arg.split()]

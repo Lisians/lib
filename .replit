@@ -2,3 +2,7 @@ modules = ["python-3.10"]
 
 [nix]
 channel = "stable-24_05"
+packages = ["cargo", "freetype", "lcms2", "libiconv", "libimagequant", "libjpeg", "libtiff", "libwebp", "libxcrypt", "openjpeg", "openssl", "pkg-config", "rustc", "tcl", "tk", "util-linux", "zlib"]
+
+[agent]
+expertMode = true
