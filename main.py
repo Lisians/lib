@@ -256,7 +256,7 @@ class Library(cmd.Cmd):
         return True
 
     def do_loop(self, arg):
-        userIDs = ["wise09", "wise10", "wise11", "wise12", "wise08"]
+        userIDs = ["wise09", "wise10", "wise11", "wise12", "wise08", "wise07", "wise06", "wise05", "wise04", "wise03"]
 
         self.do_info(userIDs[0])
         _roomNo, _seatNo = [s for s in arg.split()]
