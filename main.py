@@ -12,6 +12,8 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
+USERIDS = ["wise09", "wise10", "wise11", "wise12", "wise08", "wise02", "wise06", "wise05", "wise04", "wise03"]
+
 def save_to_json_file(data, filename):
     """
     제공된 데이터를 JSON 형식으로 지정된 파일에 저장합니다.
@@ -100,6 +102,7 @@ class Library(cmd.Cmd):
     intro.add_row("swap", "자리 스왑", "fromUserID toUserID")
     intro.add_row("autoexpand", "자동 연장", "*userID")
     intro.add_row("book", "예약", "time roomNo SeatNo")
+    intro.add_row("looptest", "loop 테스트", "roomNo SeatNo")
     prompt = '(입력) : '
 
     def onecmd(self, line):
@@ -256,7 +259,7 @@ class Library(cmd.Cmd):
         return True
 
     def do_loop(self, arg):
-        userIDs = ["wise09", "wise10", "wise11", "wise12", "wise08", "wise07", "wise06", "wise05", "wise04", "wise03"]
+        userIDs = USERIDS
 
         self.do_info(userIDs[0])
         _roomNo, _seatNo = [s for s in arg.split()]
@@ -334,6 +337,17 @@ class Library(cmd.Cmd):
         # schedule.every().day.at("11:05").do(self.do_loop(self, f"{_roomNo} {_seatNo}"))
         schedule.every().day.at("12:05").do(self.do_info(self))
         # schedule.run_pending()
+
+    def do_looptest(self, arg):
+        userIDs = USERIDS
+
+        _roomNo, _seatNo = [s for s in arg.split()]
+        logger.info(f"선택 자리 : {_roomNo} / {_seatNo}")
+
+        for userId in userIDs:
+            logger.info(f"선택 아이디 : {userId}")
+            self.do_assign(f"{userId} {_roomNo} {_seatNo}")
+            self.do_return(userId)
 
     def do_show(self):
         """자리 번호 확인"""
